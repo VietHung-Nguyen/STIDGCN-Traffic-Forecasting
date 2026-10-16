@@ -1,48 +1,68 @@
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+from models.stidgcn import STIDGCN
+from utils.data_loader import get_dataloader
+from utils.metrics import masked_mae, masked_rmse, masked_mape
 
 
-# from models.stidgcn import STIDGCN
-# from utils.metrics import masked_mae, masked_rmse, masked_mape
+def evaluate_and_plot(model_path, data_dir, device):
+    # 1. Tải dữ liệu Test và bộ Scaler
+    _, _, test_loader, scaler = get_dataloader(data_dir=data_dir, batch_size=64)
 
-def evaluate_and_plot(model_path, test_loader, scaler, device):
-    print(f"Đang tải trọng số từ {model_path}...")
-    # Khởi tạo mô hình và tải trọng số
-    # model = STIDGCN(...).to(device)
-    # model.load_state_dict(torch.load(model_path, map_location=device))
-    # model.eval()
+    # 2. Khởi tạo mô hình và nạp trọng số đã huấn luyện
+    model = STIDGCN(num_nodes=170, in_dim=1, out_dim=1, channels=48, seq_len=12, horizon=12).to(device)
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
 
-    preds, truths = [], []
-    # Vòng lặp test
-    # with torch.no_grad():
-    #     for x, y in test_loader:
-    #         out = model(x.to(device))
-    #         preds.append(out.cpu())
-    #         truths.append(y)
+    preds_list, truths_list = [], []
 
-    # Giả lập dữ liệu để vẽ test (Xóa khi có code thật)
-    y_true = np.sin(np.linspace(0, 10, 100))
-    y_pred = y_true + np.random.normal(0, 0.1, 100)
+    with torch.no_grad():
+        for batch_x, batch_y in test_loader:
+            batch_x = batch_x.to(device)
+            output = model(batch_x)
+            # Đưa dự đoán về lại miền giá trị lưu lượng thực tế
+            predict = scaler.inverse_transform(output.cpu())
 
-    # Tính các chỉ số
-    # mae = masked_mae(torch.tensor(y_pred), torch.tensor(y_true))
-    # print(f"Test MAE: {mae:.4f}")
+            preds_list.append(predict)
+            truths_list.append(batch_y)
 
-    # Trực quan hóa kết quả tại một nút giao thông cụ thể
-    plt.figure(figsize=(12, 4))
-    plt.plot(y_true[:100], label='Ground Truth', color='blue', linewidth=1.5)
-    plt.plot(y_pred[:100], label='Prediction', color='red', linestyle='--', linewidth=1.5)
-    plt.title("So sánh Lưu lượng Giao thông: Thực tế vs Dự báo", fontsize=14)
-    plt.xlabel("Các mốc thời gian (Time Steps)", fontsize=12)
-    plt.ylabel("Lưu lượng", fontsize=12)
+    preds = torch.cat(preds_list, dim=0)
+    truths = torch.cat(truths_list, dim=0)
+
+    # 3. Tính toán các chỉ số đánh giá trên toàn bộ tập Test
+    mae = masked_mae(preds, truths, null_val=0.0).item()
+    rmse = masked_rmse(preds, truths, null_val=0.0).item()
+    mape = masked_mape(preds, truths, null_val=0.0).item() * 100
+
+    print("\n" + "=" * 45)
+    print(f"KẾT QUẢ ĐÁNH GIÁ TRÊN TẬP TEST (PEMS08)")
+    print(f" - MAE  : {mae:.4f}")
+    print(f" - RMSE : {rmse:.4f}")
+    print(f" - MAPE : {mape:.2f}%")
+    print("=" * 45 + "\n")
+
+    # 4. Vẽ biểu đồ so sánh tại Trạm cảm biến số 0 (Dự báo ở bước thời gian đầu tiên t+1)
+    node_id = 0
+    time_steps_to_plot = 288  # 288 bước * 5 phút = 1 ngày (24 giờ)
+
+    y_true_plot = truths[:time_steps_to_plot, 0, node_id, 0].numpy()
+    y_pred_plot = preds[:time_steps_to_plot, 0, node_id, 0].numpy()
+
+    plt.figure(figsize=(12, 4.5))
+    plt.plot(y_true_plot, label='Lưu lượng thực tế (Ground Truth)', color='#1f77b4', linewidth=1.5)
+    plt.plot(y_pred_plot, label='Lưu lượng dự báo (STIDGCN)', color='#d62728', linestyle='--', linewidth=1.5)
+    plt.title(f"So sánh Lưu lượng Giao thông trong 24 giờ (Nút cảm biến #{node_id} - PEMS08)", fontsize=13)
+    plt.xlabel("Mốc thời gian (5 phút / bước)", fontsize=11)
+    plt.ylabel("Lưu lượng xe (Traffic Flow)", fontsize=11)
     plt.legend()
-    plt.grid(True)
+    plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig('checkpoints/prediction_plot.png')
+    plt.savefig('checkpoints/prediction_plot.png', dpi=300)
+    print("Đã lưu biểu đồ vào: checkpoints/prediction_plot.png")
     plt.show()
 
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    evaluate_and_plot('checkpoints/best_stidgcn.pth', None, None, device)
+    evaluate_and_plot('checkpoints/best_stidgcn.pth', 'data/PEMS08', device)
