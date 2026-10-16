@@ -35,12 +35,24 @@ def evaluate_and_plot(model_path, data_dir, device):
     rmse = masked_rmse(preds, truths, null_val=0.0).item()
     mape = masked_mape(preds, truths, null_val=0.0).item() * 100
 
-    print("\n" + "=" * 45)
-    print(f"KẾT QUẢ ĐÁNH GIÁ TRÊN TẬP TEST (PEMS08)")
+    print("\n" + "=" * 50)
+    print(f"KẾT QUẢ ĐÁNH GIÁ TỔNG THỂ TRÊN TẬP TEST (PEMS08)")
     print(f" - MAE  : {mae:.4f}")
     print(f" - RMSE : {rmse:.4f}")
     print(f" - MAPE : {mape:.2f}%")
-    print("=" * 45 + "\n")
+    print("=" * 50)
+
+    print("\n CHI TIẾT ĐÁNH GIÁ THEO TỪNG MỐC DỰ BÁO:")
+    # step 2 tương ứng phút thứ 15 (3 bước * 5 phút)
+    # step 5 tương ứng phút thứ 30 (6 bước * 5 phút)
+    # step 11 tương ứng phút thứ 60 (12 bước * 5 phút)
+    for step, mins in [(2, 15), (5, 30), (11, 60)]:
+        s_mae = masked_mae(preds[:, step, :, :], truths[:, step, :, :], null_val=0.0).item()
+        s_rmse = masked_rmse(preds[:, step, :, :], truths[:, step, :, :], null_val=0.0).item()
+        s_mape = masked_mape(preds[:, step, :, :], truths[:, step, :, :], null_val=0.0).item() * 100
+        print(
+            f" -> Dự báo sau {mins:2d} phút (Horizon {step + 1:2d}) | MAE: {s_mae:.4f} | RMSE: {s_rmse:.4f} | MAPE: {s_mape:.2f}%")
+    print("=" * 50 + "\n")
 
     # 4. Vẽ biểu đồ so sánh tại Trạm cảm biến số 0 (Dự báo ở bước thời gian đầu tiên t+1)
     node_id = 0
