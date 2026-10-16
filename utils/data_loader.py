@@ -1,10 +1,12 @@
 import numpy as np
-import pandas as pd
 import torch
 from torch.utils.data import DataLoader, TensorDataset
+import os
+
 
 class StandardScaler:
     """Chuẩn hóa dữ liệu Z-score để mô hình hội tụ nhanh hơn."""
+
     def __init__(self, mean, std):
         self.mean = mean
         self.std = std
@@ -15,34 +17,63 @@ class StandardScaler:
     def inverse_transform(self, data):
         return (data * self.std) + self.mean
 
-def load_adjacency_matrix(adj_filepath):
-    """Đọc ma trận kề tĩnh tĩnh đồ thị giao thông."""
-    # Placeholder: Điều chỉnh cấu trúc đọc theo định dạng file .csv hoặc .npz của PEMS
-    try:
-        adj = np.load(adj_filepath)
-        return torch.tensor(adj, dtype=torch.float32)
-    except FileNotFoundError:
-        print(f"Warning: Không tìm thấy file đồ thị tại {adj_filepath}.")
-        return None
 
-def get_dataloader(data_filepath, batch_size=64, train_ratio=0.6, val_ratio=0.2):
-    """Load và chia tập train/val/test."""
-    # Placeholder: Load data PEMS thực tế (shape: Sequence_length x Nodes x Features)
-    # data = np.load(data_filepath)['data']
-    data = np.random.rand(1000, 307, 3) # Dữ liệu giả lập 307 nút mạng (PEMS04)
-    
-    # Chia tập dữ liệu
+def generate_dataset(data, seq_len, horizon):
+    """
+    Cắt chuỗi thời gian thành các cặp (Input, Target) theo cửa sổ trượt (sliding window).
+    - seq_len: số lượng time steps dùng làm input (ví dụ: 12 bước = 1 tiếng).
+    - horizon: số lượng time steps cần dự đoán (ví dụ: 12 bước = 1 tiếng).
+    """
+    x, y = [], []
     num_samples = data.shape[0]
-    train_steps = int(num_samples * train_ratio)
-    val_steps = int(num_samples * (train_ratio + val_ratio))
-    
-    train_data = data[:train_steps]
-    val_data = data[train_steps:val_steps]
-    test_data = data[val_steps:]
-    
-    # Chuẩn hóa
-    scaler = StandardScaler(mean=train_data[..., 0].mean(), std=train_data[..., 0].std())
-    
-    # TODO: Cắt window trượt (Sliding window) cho chuỗi thời gian (Vd: 12 steps -> 12 steps)
-    
-    return train_data, val_data, test_data, scaler
+
+    for i in range(num_samples - seq_len - horizon + 1):
+        x.append(data[i: i + seq_len])
+        y.append(data[i + seq_len: i + seq_len + horizon])
+
+    return np.array(x), np.array(y)
+
+def get_dataloader(data_dir, batch_size=32):
+    """Load dữ liệu đã được cắt sẵn từ thư mục chứa train/val/test.npz"""
+
+    print(f"Đang tải dữ liệu từ thư mục: {data_dir}")
+
+    # Đọc cả 3 file
+    train_data = np.load(os.path.join(data_dir, 'train.npz'))
+    val_data = np.load(os.path.join(data_dir, 'val.npz'))
+    test_data = np.load(os.path.join(data_dir, 'test.npz'))
+
+    # Các bộ dữ liệu chia sẵn thường đã cắt thành x và y
+    x_train, y_train = train_data['x'], train_data['y']
+    x_val, y_val = val_data['x'], val_data['y']
+    x_test, y_test = test_data['x'], test_data['y']
+
+    # Chỉ lấy đặc trưng đầu tiên (Traffic Flow - Lưu lượng)
+    # Shape ban đầu thường là (Batch, Seq_len, Nodes, Features)
+    x_train = x_train[..., 0:1].astype(np.float32)
+    y_train = y_train[..., 0:1].astype(np.float32)
+
+    x_val = x_val[..., 0:1].astype(np.float32)
+    y_val = y_val[..., 0:1].astype(np.float32)
+
+    x_test = x_test[..., 0:1].astype(np.float32)
+    y_test = y_test[..., 0:1].astype(np.float32)
+
+    print(f"Kích thước tập Train: X={x_train.shape}, Y={y_train.shape}")
+
+    # Chuẩn hóa dữ liệu (Tính Mean/Std trên x_train)
+    scaler = StandardScaler(mean=x_train.mean(), std=x_train.std())
+
+    x_train_scaled = scaler.transform(x_train)
+    x_val_scaled = scaler.transform(x_val)
+    x_test_scaled = scaler.transform(x_test)
+
+    # Đóng gói DataLoader
+    train_loader = DataLoader(TensorDataset(torch.tensor(x_train_scaled), torch.tensor(y_train)), batch_size=batch_size,
+                              shuffle=True)
+    val_loader = DataLoader(TensorDataset(torch.tensor(x_val_scaled), torch.tensor(y_val)), batch_size=batch_size,
+                            shuffle=False)
+    test_loader = DataLoader(TensorDataset(torch.tensor(x_test_scaled), torch.tensor(y_test)), batch_size=batch_size,
+                             shuffle=False)
+
+    return train_loader, val_loader, test_loader, scaler

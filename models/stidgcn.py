@@ -25,7 +25,35 @@ class InteractiveLearningBlock(nn.Module):
     def forward(self, x):
         return self.conv1D(x)
 
+
 class STIDGCN(nn.Module):
     """Mô hình cốt lõi STIDGCN."""
+
     def __init__(self, num_nodes, in_dim, out_dim, seq_len=12, horizon=12):
-        super(STID
+        super(STIDGCN, self).__init__()
+        self.num_nodes = num_nodes
+        self.seq_len = seq_len
+        self.horizon = horizon
+
+        self.dgcn = DynamicGraphConvolution(in_dim, 64)
+        self.interactive_learning = InteractiveLearningBlock(64)
+
+        # Tầng dự báo đầu ra (chuyển từ seq_len sang horizon)
+        self.regression_layer = nn.Linear(seq_len, horizon)
+
+    def forward(self, x):
+        # Input x shape: (Batch, Seq_len, Nodes, Features) -> (Batch, 12, 307, 1)
+
+        # TẠM THỜI: Xây dựng một luồng forward đơn giản (Bypass) để code train.py chạy được không báo lỗi.
+        # Chúng ta sẽ thay thế bằng logic đồ thị động (DGCN) và học tương tác (Interactive) ở các bước sau.
+
+        # Chuyển đổi chiều: (Batch, Seq, Nodes, Feat) -> (Batch, Nodes, Feat, Seq)
+        out = x.permute(0, 2, 3, 1)  # Shape: (Batch, 307, 1, 12)
+
+        # Cho qua lớp Linear để dự đoán tương lai: 12 bước quá khứ -> 12 bước tương lai
+        out = self.regression_layer(out)  # Shape: (Batch, 307, 1, 12)
+
+        # Trả về đúng chiều ban đầu: (Batch, Horizon, Nodes, Features)
+        out = out.permute(0, 3, 1, 2)  # Shape: (Batch, 12, 307, 1)
+
+        return out
