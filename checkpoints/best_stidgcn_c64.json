@@ -1,0 +1,23 @@
+{
+  "channels": 64,
+  "features": [
+    0
+  ],
+  "in_dim": 1,
+  "num_nodes": 170,
+  "seq_len": 12,
+  "horizon": 12,
+  "dropout": 0.1,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "batch_size": 64,
+  "clip": 5.0,
+  "seed": 6666,
+  "epochs": 20,
+  "params": 93597,
+  "data_dir": "data/PEMS08",
+  "best_epoch": 19,
+  "best_val_mae": 19.102237780554674,
+  "epochs_run": 20,
+  "avg_epoch_time_sec": 139.0333838224411
+}

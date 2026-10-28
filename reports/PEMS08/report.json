@@ -1,0 +1,337 @@
+{
+  "dataset": "PEMS08",
+  "data_dir": "D:\\SuDung\\nam3UET\\phanTichDuLieuDuBao\\project_GK\\data\\PEMS08",
+  "fingerprint": "917cf8a1f7bd",
+  "created": "2026-10-28 01:28:50",
+  "splits": {
+    "train": {
+      "x_shape": [
+        10699,
+        12,
+        170,
+        3
+      ],
+      "y_shape": [
+        10699,
+        12,
+        170,
+        1
+      ],
+      "x_dtype": "float64",
+      "y_dtype": "float64",
+      "nan_per_feature": [
+        0,
+        0,
+        0
+      ],
+      "inf_per_feature": [
+        0,
+        0,
+        0
+      ],
+      "nan_y": 0,
+      "window_continuity": 1.0,
+      "series_len": 10722,
+      "flow": {
+        "min": 0.0,
+        "max": 1077.0,
+        "mean_all": 229.52712509738086,
+        "std_all": 145.65894208841712,
+        "mean_nonzero": 230.32002928765488,
+        "std_nonzero": 145.28316640578757,
+        "p01_p50_p99": [
+          6.0,
+          214.0,
+          591.0
+        ],
+        "zero_pct": 0.3442619353281324,
+        "negative_count": 0,
+        "outlier_pct_iqr3": 0.00027525991417395873
+      },
+      "nodes": {
+        "top5_missing": [
+          {
+            "node": 155,
+            "zero_pct": 10.688304420817012
+          },
+          {
+            "node": 33,
+            "zero_pct": 9.270658459242679
+          },
+          {
+            "node": 147,
+            "zero_pct": 8.114157806379406
+          },
+          {
+            "node": 139,
+            "zero_pct": 7.423988061928745
+          },
+          {
+            "node": 169,
+            "zero_pct": 6.024995336690916
+          }
+        ],
+        "n_nodes_missing_gt_50pct": 0,
+        "constant_nodes": [],
+        "longest_missing_gap_steps": 400,
+        "node_longest_gap": 30,
+        "longest_stuck_steps": 101,
+        "node_longest_stuck": 107
+      },
+      "time_of_day_range": [
+        0.0,
+        0.9965277777777778
+      ],
+      "steps_per_day": 288,
+      "time_gaps": 0,
+      "day_of_week_values": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "npz_keys": [
+        "x",
+        "y",
+        "x_offsets",
+        "y_offsets"
+      ]
+    },
+    "val": {
+      "x_shape": [
+        3567,
+        12,
+        170,
+        3
+      ],
+      "y_shape": [
+        3567,
+        12,
+        170,
+        1
+      ],
+      "x_dtype": "float64",
+      "y_dtype": "float64",
+      "nan_per_feature": [
+        0,
+        0,
+        0
+      ],
+      "inf_per_feature": [
+        0,
+        0,
+        0
+      ],
+      "nan_y": 0,
+      "window_continuity": 1.0,
+      "series_len": 3590,
+      "flow": {
+        "min": 0.0,
+        "max": 1147.0,
+        "mean_all": 232.72558250040964,
+        "std_all": 147.92122072636218,
+        "mean_nonzero": 233.6105696165056,
+        "std_nonzero": 147.50305431588973,
+        "p01_p50_p99": [
+          6.0,
+          219.0,
+          593.0
+        ],
+        "zero_pct": 0.3788300835654596,
+        "negative_count": 0,
+        "outlier_pct_iqr3": 0.00032895386093146576
+      },
+      "nodes": {
+        "top5_missing": [
+          {
+            "node": 147,
+            "zero_pct": 9.88857938718663
+          },
+          {
+            "node": 155,
+            "zero_pct": 9.721448467966574
+          },
+          {
+            "node": 33,
+            "zero_pct": 9.025069637883009
+          },
+          {
+            "node": 139,
+            "zero_pct": 8.495821727019498
+          },
+          {
+            "node": 154,
+            "zero_pct": 6.6016713091922
+          }
+        ],
+        "n_nodes_missing_gt_50pct": 0,
+        "constant_nodes": [],
+        "longest_missing_gap_steps": 29,
+        "node_longest_gap": 154,
+        "longest_stuck_steps": 59,
+        "node_longest_stuck": 78
+      },
+      "time_of_day_range": [
+        0.0,
+        0.9965277777777778
+      ],
+      "steps_per_day": 288,
+      "time_gaps": 0,
+      "day_of_week_values": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "npz_keys": [
+        "x",
+        "y",
+        "x_offsets",
+        "y_offsets"
+      ]
+    },
+    "test": {
+      "x_shape": [
+        3567,
+        12,
+        170,
+        3
+      ],
+      "y_shape": [
+        3567,
+        12,
+        170,
+        1
+      ],
+      "x_dtype": "float64",
+      "y_dtype": "float64",
+      "nan_per_feature": [
+        0,
+        0,
+        0
+      ],
+      "inf_per_feature": [
+        0,
+        0,
+        0
+      ],
+      "nan_y": 0,
+      "window_continuity": 1.0,
+      "series_len": 3590,
+      "flow": {
+        "min": 0.0,
+        "max": 848.0,
+        "mean_all": 231.69334753399968,
+        "std_all": 146.51877817481972,
+        "mean_nonzero": 232.47537595746465,
+        "std_nonzero": 146.14516599057214,
+        "p01_p50_p99": [
+          6.0,
+          217.0,
+          587.0
+        ],
+        "zero_pct": 0.33639193839095527,
+        "negative_count": 0,
+        "outlier_pct_iqr3": 0.0
+      },
+      "nodes": {
+        "top5_missing": [
+          {
+            "node": 33,
+            "zero_pct": 12.423398328690807
+          },
+          {
+            "node": 155,
+            "zero_pct": 12.367688022284122
+          },
+          {
+            "node": 147,
+            "zero_pct": 9.47075208913649
+          },
+          {
+            "node": 139,
+            "zero_pct": 8.94150417827298
+          },
+          {
+            "node": 169,
+            "zero_pct": 8.133704735376044
+          }
+        ],
+        "n_nodes_missing_gt_50pct": 0,
+        "constant_nodes": [],
+        "longest_missing_gap_steps": 27,
+        "node_longest_gap": 155,
+        "longest_stuck_steps": 104,
+        "node_longest_stuck": 78
+      },
+      "time_of_day_range": [
+        0.0,
+        0.9965277777777778
+      ],
+      "steps_per_day": 288,
+      "time_gaps": 0,
+      "day_of_week_values": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "npz_keys": [
+        "x",
+        "y",
+        "x_offsets",
+        "y_offsets"
+      ]
+    }
+  },
+  "split_ratio": {
+    "train": 0.6,
+    "val": 0.2,
+    "test": 0.2
+  },
+  "estimated_total_timesteps": 17856,
+  "mean_shift_vs_train_pct": {
+    "val": 1.43,
+    "test": 0.94
+  },
+  "scaler": {
+    "mean": 229.85893440655073,
+    "std": 145.6226807793881
+  },
+  "overall_zero_pct": 0.34961588255009296,
+  "paper": {
+    "nodes": 170,
+    "timesteps": 17856,
+    "missing_pct": 0.696
+  },
+  "figures": {
+    "hist": "flow_hist.png",
+    "daily": "daily_profile.png",
+    "missing": "missing_heatmap.png",
+    "week": "node_week.png"
+  },
+  "warnings": [
+    {
+      "level": "WARN",
+      "msg": "[train] nút 107 lặp nguyên một giá trị 101 bước liên tiếp (≥1 giờ) → nghi cảm biến lỗi"
+    },
+    {
+      "level": "WARN",
+      "msg": "[val] nút 78 lặp nguyên một giá trị 59 bước liên tiếp (≥1 giờ) → nghi cảm biến lỗi"
+    },
+    {
+      "level": "WARN",
+      "msg": "[test] nút 78 lặp nguyên một giá trị 104 bước liên tiếp (≥1 giờ) → nghi cảm biến lỗi"
+    }
+  ],
+  "elapsed_sec": 4.21
+}
