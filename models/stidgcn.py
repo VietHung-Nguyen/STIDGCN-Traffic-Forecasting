@@ -1,16 +1,7 @@
-"""
-Bản STIDGCN ĐƠN GIẢN HÓA (tự cài đặt) — dùng cho phần thực nghiệm mở rộng.
-
-Lưu ý: đây KHÔNG phải bản tái hiện đầy đủ của bài báo. So với code tác giả, bản này:
-  - không có 4 lớp Conv1..Conv4 theo chiều thời gian,
-  - dùng 4 module đồ thị riêng (bài báo dùng 1 DGCN dùng chung),
-  - đồ thị là adaptive adjacency tĩnh (kiểu Graph WaveNet), không sinh từ dữ liệu đầu vào,
-  - không có time embedding (giờ trong ngày, thứ trong tuần) nếu chỉ dùng features=(0,),
-  - cấu trúc 2 khối nối tiếp thay vì cây 2 tầng (12 -> 6 -> 3).
-"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from models.dynamic_graph import make_graph_module
 
 
 class Splitting(nn.Module):
@@ -44,8 +35,6 @@ class DynamicGraphConvolution(nn.Module):
         adj = F.softmax(F.relu(torch.mm(self.node_vec1, self.node_vec2)), dim=-1)
 
         # 2. Lan truyền thông tin giữa các nút: out[n] = sum_m adj[n, m] * x[m]
-        # (ĐÃ SỬA: bản cũ dùng 'nn,bsnc->bsnc' -> einsum lấy ĐƯỜNG CHÉO của adj,
-        #  nên mỗi nút chỉ nhân với chính nó, không có tích chập đồ thị)
         gcn_out = torch.einsum('nm,bsmc->bsnc', adj, x)
 
         # 3. Kết hợp đặc trưng gốc và đặc trưng đồ thị
@@ -53,20 +42,16 @@ class DynamicGraphConvolution(nn.Module):
         out = F.relu(self.proj(out))
         return self.dropout(out)
 
-
 class InteractiveLearningBlock(nn.Module):
-    """Khối học tương tác giữa nhánh chẵn/lẻ kết hợp tích chập đồ thị."""
-
-    def __init__(self, channels, num_nodes, dropout=0.1, splitting=True):
-        super(InteractiveLearningBlock, self).__init__()
+    def __init__(self, channels, num_nodes, dropout=0.1, splitting=True, graph_kwargs=None):
+        super().__init__()
         self.splitting = splitting
         self.split = Splitting()
-
-        # 4 bộ biến đổi tương tác (bài báo gốc dùng 4 Conv riêng + 1 DGCN dùng chung)
-        self.phi = DynamicGraphConvolution(channels, num_nodes, dropout=dropout)
-        self.psi = DynamicGraphConvolution(channels, num_nodes, dropout=dropout)
-        self.eta = DynamicGraphConvolution(channels, num_nodes, dropout=dropout)
-        self.rho = DynamicGraphConvolution(channels, num_nodes, dropout=dropout)
+        gk = graph_kwargs or {}
+        self.phi = make_graph_module(channels, num_nodes, dropout, **gk)
+        self.psi = make_graph_module(channels, num_nodes, dropout, **gk)
+        self.eta = make_graph_module(channels, num_nodes, dropout, **gk)
+        self.rho = make_graph_module(channels, num_nodes, dropout, **gk)
 
     def forward(self, x):
         if not self.splitting:
@@ -94,19 +79,19 @@ class InteractiveLearningBlock(nn.Module):
 class STIDGCN(nn.Module):
     """Kiến trúc tổng thể (bản đơn giản hóa)."""
 
-    def __init__(self, num_nodes=170, in_dim=1, out_dim=1, channels=48, seq_len=12, horizon=12,
-                 dropout=0.1, splitting=True):
-        super(STIDGCN, self).__init__()
+    def __init__(self, num_nodes=170, in_dim=1, out_dim=1, channels=48,
+                 seq_len=12, horizon=12, dropout=0.1, splitting=True,
+                 graph="adaptive", adj_norm=None, init_adj=None, tau=0.5):
+
+        super().__init__()
         self.num_nodes = num_nodes
         self.seq_len = seq_len
         self.horizon = horizon
 
-        # 1. Nhúng đầu vào: in_dim đặc trưng -> channels kênh ẩn
+        gk = dict(graph=graph, adj_norm=adj_norm, init_adj=init_adj, tau=tau)
         self.start_conv = nn.Linear(in_dim, channels)
-
-        # 2. Hai khối học tương tác nối tiếp, có kết nối tắt (residual)
-        self.block1 = InteractiveLearningBlock(channels, num_nodes, dropout, splitting)
-        self.block2 = InteractiveLearningBlock(channels, num_nodes, dropout, splitting)
+        self.block1 = InteractiveLearningBlock(channels, num_nodes, dropout, splitting, graph_kwargs=gk)
+        self.block2 = InteractiveLearningBlock(channels, num_nodes, dropout, splitting, graph_kwargs=gk)
 
         # 3. Đầu ra: chiếu chiều thời gian seq_len -> horizon, rồi kênh -> out_dim
         self.time_proj = nn.Linear(seq_len, horizon)

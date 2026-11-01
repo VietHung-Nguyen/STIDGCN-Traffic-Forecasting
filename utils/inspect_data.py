@@ -1,18 +1,3 @@
-"""
-Kiểm tra dữ liệu PEMS (train/val/test.npz) MỘT LẦN, lưu báo cáo vào cache.
-
-Cách dùng:
-    python -m utils.inspect_data --data_dir data/PEMS08            # tạo báo cáo đầy đủ + hình
-    python -m utils.inspect_data --data_dir data/PEMS08 --force    # bắt buộc kiểm tra lại
-
-Trong code train/evaluate chỉ cần gọi:
-    from utils.inspect_data import ensure_report
-    ensure_report("data/PEMS08")   # in 1 dòng tóm tắt nếu dữ liệu không đổi
-
-Báo cáo được lưu ở reports/<TÊN_DATASET>/ gồm: report.json, report.md và các hình .png.
-Cache được khóa bằng "dấu vân tay" (kích thước + thời gian sửa file .npz), nên khi bạn
-thay dữ liệu thì báo cáo tự được tạo lại.
-"""
 import argparse
 import hashlib
 import json
@@ -27,11 +12,8 @@ from config import DATA_DIR
 REPORT_VERSION = 1
 SPLITS = ("train", "val", "test")
 
-# Thư mục gốc project (= thư mục cha của utils/). Đường dẫn tương đối luôn tính từ đây,
-# nên chạy script từ thư mục nào (terminal, PyCharm, VS Code) cũng đúng.
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Số liệu trong Table 2 của bài báo STIDGCN để đối chiếu
 PAPER_STATS = {
     "PEMS03": dict(nodes=358, timesteps=26208, missing_pct=0.672),
     "PEMS04": dict(nodes=307, timesteps=16992, missing_pct=3.182),
